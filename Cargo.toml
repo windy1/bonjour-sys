@@ -1,6 +1,6 @@
 [package]
 name = "bonjour-sys"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Walker Crouse <walkercrouse@hotmail.com>"]
 edition = "2018"
 description = "Bindings for low-level Bonjour services (a.k.a. zeroconf)."
@@ -9,7 +9,13 @@ homepage = "https://github.com/windy1/bonjour-sys"
 repository = "https://github.com/windy1/bonjour-sys"
 license-file = "LICENSE"
 keywords = ["bonjour", "zeroconf", "mdns", "avahi", "dnssd"]
-categories = ["api-bindings", "external-ffi-bindings", "network-programming", "os", "os::macos-apis"]
+categories = [
+    "api-bindings",
+    "external-ffi-bindings",
+    "network-programming",
+    "os",
+    "os::macos-apis",
+]
 build = "build.rs"
 
 [build-dependencies]
