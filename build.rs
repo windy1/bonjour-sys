@@ -3,7 +3,7 @@ extern crate bindgen;
 use std::env;
 use std::path::PathBuf;
 
-#[cfg(target_vendor = "apple")]
+#[cfg(not(target_vendor = "pc"))]
 fn main() {
     bindgen::Builder::default()
         .header("wrapper.h")
