@@ -16,7 +16,7 @@ fn main() {
 
 #[cfg(target_vendor = "pc")]
 fn main() {
-    use std::io::{Read, Write, Seek};
+    use std::io::{Read, Seek, Write};
     let bindings_rs_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     // Generate the dns_sd.h bindings first so we can
@@ -31,7 +31,11 @@ fn main() {
         .write_to_file(&bindings_rs_path)
         .expect("failed to write dns_sd.h bindings to file");
 
-    let mut file = std::fs::OpenOptions::new().write(true).read(true).open(&bindings_rs_path).unwrap();
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .read(true)
+        .open(&bindings_rs_path)
+        .unwrap();
     let mut contents: String = String::new();
     file.read_to_string(&mut contents).unwrap();
     contents = contents.replace(

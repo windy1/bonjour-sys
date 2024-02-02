@@ -1,6 +1,6 @@
 [package]
 name = "bonjour-sys"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Walker Crouse <walkercrouse@hotmail.com>"]
 edition = "2018"
 description = "Bindings for low-level Bonjour services (a.k.a. zeroconf)."
@@ -23,3 +23,6 @@ bindgen = "0.68.1"
 
 [dependencies]
 libc = "0.2.77"
+
+[package.metadata.docs.rs]
+targets = ["aarch64-apple-darwin"]
