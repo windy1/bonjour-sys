@@ -2,7 +2,6 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-#[cfg(target_vendor = "pc")]
 include!(concat!(env!("OUT_DIR"), "/bindings2.rs"));
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 

@@ -3,24 +3,15 @@ extern crate bindgen;
 use std::env;
 use std::path::PathBuf;
 
-#[cfg(not(target_vendor = "pc"))]
-fn main() {
-    bindgen::Builder::default()
-        .header("wrapper.h")
-        .ctypes_prefix("::libc")
-        .generate()
-        .expect("failed to generate bindings")
-        .write_to_file(PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs"))
-        .expect("failed to write bindings to file");
-}
-
-#[cfg(target_vendor = "pc")]
 fn main() {
     use std::io::{Read, Seek, Write};
-    let bindings_rs_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+
+    let bindings_rs_path = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("bindings.rs");
 
     // Generate the dns_sd.h bindings first so we can
-    // mark them as being available in dnssd.dll.
+    // add some marks eg. #[link] and abi.
     bindgen::Builder::default()
         .header("wrapper.h")
         .ctypes_prefix("::libc")
@@ -38,10 +29,29 @@ fn main() {
         .unwrap();
     let mut contents: String = String::new();
     file.read_to_string(&mut contents).unwrap();
-    contents = contents.replace(
-        "extern \"C\" {",
-        "#[link(name = \"dnssd\", kind = \"raw-dylib\")]\r\nextern \"C\" {",
-    );
+    if target_os == "windows" {
+        if target_arch == "x86" {
+            contents = contents.replace("extern \"stdcall\"", "extern \"system\"");
+
+            // Mark them as being available in dnssd.dll,
+            // with undecorated names (decorated names are used by default on Win x86)
+            contents = contents.replace(
+                "extern \"system\" {",
+                "#[link(name = \"dnssd\", kind = \"raw-dylib\", import_name_type = \"undecorated\")]\r\nextern \"system\" {",
+            );
+        } else {
+            contents = contents.replace("extern \"C\"", "extern \"system\"");
+
+            // Mark them as being available in dnssd.dll
+            contents = contents.replace(
+                "extern \"system\" {",
+                "#[link(name = \"dnssd\", kind = \"raw-dylib\")]\r\nextern \"system\" {",
+            );
+        }
+    } else {
+        // Mark them as system abi, thus convenient for writing platform-independent code
+        contents = contents.replace("extern \"C\"", "extern \"system\"");
+    }
     file.seek(std::io::SeekFrom::Start(0)).unwrap();
     file.set_len(0).unwrap();
     file.write_all(contents.as_bytes())
@@ -61,6 +71,6 @@ fn main() {
         .blocklist_type("_IMAGE_TLS_DIRECTORY64")
         .generate()
         .expect("failed to generate system bindings")
-        .write_to_file(&PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings2.rs"))
+        .write_to_file(PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("bindings2.rs"))
         .expect("failed to write system bindings to file");
 }
