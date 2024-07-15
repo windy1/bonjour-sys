@@ -1,5 +1,6 @@
 extern crate bindgen;
 
+use bindgen::Abi;
 use std::env;
 use std::path::PathBuf;
 
@@ -17,45 +18,41 @@ fn main() {
         .ctypes_prefix("::libc")
         .allowlist_file(".*dns_sd.h")
         .allowlist_recursively(false)
+        .override_abi(Abi::System, "DNSService.*")
+        .override_abi(Abi::System, "TXTRecord.*")
         .generate()
         .expect("failed to generate dns_sd.h bindings")
         .write_to_file(&bindings_rs_path)
         .expect("failed to write dns_sd.h bindings to file");
 
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .read(true)
-        .open(&bindings_rs_path)
-        .unwrap();
-    let mut contents: String = String::new();
-    file.read_to_string(&mut contents).unwrap();
     if target_os == "windows" {
-        if target_arch == "x86" {
-            contents = contents.replace("extern \"stdcall\"", "extern \"system\"");
+        // On Windows, we need to mark the functions as being available in dnssd.dll
 
-            // Mark them as being available in dnssd.dll,
-            // with undecorated names (decorated names are used by default on Win x86)
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .read(true)
+            .open(&bindings_rs_path)
+            .unwrap();
+        let mut contents: String = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        if target_arch == "x86" {
+            // Decorated names are used by default on Win x86,
+            // so we need to specify import_name_type = "decorated"
             contents = contents.replace(
                 "extern \"system\" {",
                 "#[link(name = \"dnssd\", kind = \"raw-dylib\", import_name_type = \"undecorated\")]\r\nextern \"system\" {",
             );
         } else {
-            contents = contents.replace("extern \"C\"", "extern \"system\"");
-
-            // Mark them as being available in dnssd.dll
             contents = contents.replace(
                 "extern \"system\" {",
                 "#[link(name = \"dnssd\", kind = \"raw-dylib\")]\r\nextern \"system\" {",
             );
         }
-    } else {
-        // Mark them as system abi, thus convenient for writing platform-independent code
-        contents = contents.replace("extern \"C\"", "extern \"system\"");
+        file.seek(std::io::SeekFrom::Start(0)).unwrap();
+        file.set_len(0).unwrap();
+        file.write_all(contents.as_bytes())
+            .expect("Unable to write data");
     }
-    file.seek(std::io::SeekFrom::Start(0)).unwrap();
-    file.set_len(0).unwrap();
-    file.write_all(contents.as_bytes())
-        .expect("Unable to write data");
 
     // Generate bindings for everything else
     // Certain windows types we don't need have some issues with rust & bindgen
