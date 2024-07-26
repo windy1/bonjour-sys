@@ -18,6 +18,9 @@ categories = [
 ]
 build = "build.rs"
 
+[lib]
+doctest = false
+
 [build-dependencies]
 bindgen = "0.68.1"
 
