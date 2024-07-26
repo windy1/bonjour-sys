@@ -38,16 +38,3 @@ jobs:
         run: cargo build
       - name: Run tests
         run: cargo test --verbose
-
-  windows-latest-x86:
-    runs-on: windows-latest
-    with:
-      architecture: x86
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Bonjour
-        run: choco install -y bonjour
-      - name: Build
-        run: cargo build
-      - name: Run tests
-        run: cargo test --verbose
