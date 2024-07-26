@@ -27,14 +27,16 @@ fn main() {
 
     if target_os == "windows" {
         // On Windows, we need to mark the functions as being available in dnssd.dll
-
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .read(true)
             .open(&bindings_rs_path)
             .unwrap();
+
         let mut contents: String = String::new();
+
         file.read_to_string(&mut contents).unwrap();
+
         if target_arch == "x86" {
             // Decorated names are used by default on Win x86,
             // so we need to specify import_name_type = "decorated"
@@ -48,6 +50,7 @@ fn main() {
                 "#[link(name = \"dnssd\", kind = \"raw-dylib\")]\r\nextern \"system\" {",
             );
         }
+
         file.seek(std::io::SeekFrom::Start(0)).unwrap();
         file.set_len(0).unwrap();
         file.write_all(contents.as_bytes())
