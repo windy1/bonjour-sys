@@ -1,6 +1,6 @@
 [package]
 name = "bonjour-sys"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["Walker Crouse <walkercrouse@hotmail.com>"]
 edition = "2018"
 description = "Bindings for low-level Bonjour services (a.k.a. zeroconf)."
@@ -17,6 +17,9 @@ categories = [
     "os::macos-apis",
 ]
 build = "build.rs"
+
+[lib]
+doctest = false
 
 [build-dependencies]
 bindgen = "0.68.1"
