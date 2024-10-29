@@ -18,6 +18,7 @@ fn main() {
         .ctypes_prefix("::libc")
         .allowlist_file(".*dns_sd.h")
         .allowlist_recursively(false)
+        .trust_clang_mangling(false)
         .override_abi(Abi::System, "DNSService.*")
         .override_abi(Abi::System, "TXTRecord.*")
         .generate()
