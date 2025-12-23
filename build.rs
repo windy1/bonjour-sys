@@ -13,14 +13,21 @@ fn main() {
 
     // Generate the dns_sd.h bindings first so we can
     // add some marks eg. #[link] and abi.
-    bindgen::Builder::default()
+    let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
         .ctypes_prefix("::libc")
         .allowlist_file(".*dns_sd.h")
         .allowlist_recursively(false)
         .trust_clang_mangling(false)
         .override_abi(Abi::System, "DNSService.*")
-        .override_abi(Abi::System, "TXTRecord.*")
+        .override_abi(Abi::System, "TXTRecord.*");
+
+    // FreeBSD: add include path for mDNSResponder headers
+    if target_os == "freebsd" {
+        builder = builder.clang_arg("-I/usr/local/include");
+    }
+
+    builder
         .generate()
         .expect("failed to generate dns_sd.h bindings")
         .write_to_file(&bindings_rs_path)
@@ -58,10 +65,16 @@ fn main() {
             .expect("Unable to write data");
     }
 
+    // FreeBSD: link to mDNSResponder library
+    if target_os == "freebsd" {
+        println!("cargo:rustc-link-search=/usr/local/lib");
+        println!("cargo:rustc-link-lib=dns_sd");
+    }
+
     // Generate bindings for everything else
     // Certain windows types we don't need have some issues with rust & bindgen
     // Further discussion: https://github.com/rust-lang/rust-bindgen/issues/1562
-    bindgen::Builder::default()
+    let mut builder2 = bindgen::Builder::default()
         .header("wrapper.h")
         .ctypes_prefix("::libc")
         .blocklist_file(".*dns_sd.h")
@@ -69,7 +82,14 @@ fn main() {
         .blocklist_type("PIMAGE_TLS_DIRECTORY")
         .blocklist_type("IMAGE_TLS_DIRECTORY64")
         .blocklist_type("PIMAGE_TLS_DIRECTORY64")
-        .blocklist_type("_IMAGE_TLS_DIRECTORY64")
+        .blocklist_type("_IMAGE_TLS_DIRECTORY64");
+
+    // FreeBSD: add include path for second builder too
+    if target_os == "freebsd" {
+        builder2 = builder2.clang_arg("-I/usr/local/include");
+    }
+
+    builder2
         .generate()
         .expect("failed to generate system bindings")
         .write_to_file(PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("bindings2.rs"))
