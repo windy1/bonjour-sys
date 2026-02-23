@@ -1,5 +1,3 @@
-extern crate bindgen;
-
 use bindgen::Abi;
 use std::env;
 use std::path::PathBuf;
@@ -20,7 +18,8 @@ fn main() {
         .allowlist_recursively(false)
         .trust_clang_mangling(false)
         .override_abi(Abi::System, "DNSService.*")
-        .override_abi(Abi::System, "TXTRecord.*");
+        .override_abi(Abi::System, "TXTRecord.*")
+        .rust_edition(bindgen::RustEdition::Edition2024);
 
     // FreeBSD: add include path for mDNSResponder headers
     if target_os == "freebsd" {
@@ -49,13 +48,13 @@ fn main() {
             // Decorated names are used by default on Win x86,
             // so we need to specify import_name_type = "decorated"
             contents = contents.replace(
-                "extern \"system\" {",
-                "#[link(name = \"dnssd\", kind = \"raw-dylib\", import_name_type = \"undecorated\")]\r\nextern \"system\" {",
+                "unsafe extern \"system\" {",
+                "#[link(name = \"dnssd\", kind = \"raw-dylib\", import_name_type = \"undecorated\")]\r\nunsafe extern \"system\" {",
             );
         } else {
             contents = contents.replace(
-                "extern \"system\" {",
-                "#[link(name = \"dnssd\", kind = \"raw-dylib\")]\r\nextern \"system\" {",
+                "unsafe extern \"system\" {",
+                "#[link(name = \"dnssd\", kind = \"raw-dylib\")]\r\nunsafe extern \"system\" {",
             );
         }
 
@@ -77,6 +76,7 @@ fn main() {
     let mut builder2 = bindgen::Builder::default()
         .header("wrapper.h")
         .ctypes_prefix("::libc")
+        .rust_edition(bindgen::RustEdition::Edition2024)
         .blocklist_file(".*dns_sd.h")
         .blocklist_type("IMAGE_TLS_DIRECTORY")
         .blocklist_type("PIMAGE_TLS_DIRECTORY")
