@@ -29,3 +29,17 @@ jobs:
         run: cargo build
       - name: Run tests
         run: cargo test --verbose
+
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y curl rust mDNSResponder llvm
+          run: |
+            cargo build
+            cargo test --verbose
